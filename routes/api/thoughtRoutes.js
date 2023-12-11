@@ -1,27 +1,22 @@
 const router = require('express').Router();
-
+//Requiring the necessary controllers for the thought-related routes
 const {
-    getThought,
-    getSingleThought,
-    createThought,
-    updateThought,
-    deleteThought,
-    createReaction,
-    deleteReaction
+  getThoughts,
+  getSingleThought,
+  createThought,
+  updateThought,
+  deleteThought,
+  addThoughtReaction,
+  deleteThoughtReaction,
 } = require('../../controllers/thoughtController');
 
-router.route('/').get(getThought).post(createThought);
 
-router.route('/:thoughtId')
-.get(getSingleThought)
-.put(updateThought)
-.delete(deleteThought);
+router.route('/').get(getThoughts).post(createThought);
 
-router.route('/:thoughtId/reactions')
-.post(createReaction);
+router.route('/:thoughtId').get(getSingleThought).put(updateThought).delete(deleteThought);
 
-router.route('/:thoughtId/reactions/:reactionId')
-.delete(deleteReaction);
+router.route('/:thoughtId/reactions').post(addThoughtReaction);
 
+router.route('/:thoughtId/reactions/:reactionId').delete(deleteThoughtReaction);
 
 module.exports = router;

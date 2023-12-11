@@ -1,49 +1,52 @@
-const { Schema, model, Types } = require('mongoose');
+const { Schema, model } = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const mongooseLeanGetters = require('mongoose-lean-getters');
 
+// Schema to create User model
 const userSchema = new Schema(
-  {
-    username: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
+    {
+        username: {
+            type: String,
+            unique: true,
+            required: true,
+            trim: true
+        },
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+            //Regular expression to validate a user-entered email address
+            match: /^([\w\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/
+        },
+        //Array to be populated by ids of the thoughts created by the user
+        thoughts: [{
+            type: Schema.Types.ObjectId,
+            ref: 'thought',
+        }],
+       
+        friends: [{
+            type: Schema.Types.ObjectId,
+            ref: 'user',
+        }]
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please fill a valid email address",
-      ],
-    },
-    thoughts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Thought",
-      },
-    ],
-    friends: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-  },
-  {
-    toJSON: {
-      virtuals: true,
-    },
-    id: false,
-  }
+    {
+        toJSON: {
+            virtuals: true,
+        },
+        id: false,
+    }
 );
 
+userSchema
+    .virtual('friendCount')
+    .get(function () {
+        return this.friends.length;
+    });
+
+userSchema.plugin(mongooseLeanVirtuals);
+userSchema.plugin(mongooseLeanGetters);
 
 
-userSchema.virtual("friendCount").get(function () {
-  return this.friends.length;
-});
-
-const User = model('User', userSchema);
+const User = model('user', userSchema);
 
 module.exports = User;

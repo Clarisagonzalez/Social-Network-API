@@ -1,71 +1,49 @@
-const { Schema, model, Types } = require('mongoose');
+const { Schema, model } = require('mongoose');
+const reactionSchema = require('./Reaction');
+const formatDate  = require('../utils/formatDate');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const mongooseLeanGetters = require('mongoose-lean-getters');
 
-const moment = require('moment')
-
-const reactionSchema = new Schema (
+const thoughtSchema = new Schema(
     {
-       reactionId: {
-        type: Schema.Types.ObjectId,
-        default: () => new Types.ObjectId(),
-       },
-       reactionBody: {
-        type: String,
-        required: true,
-        maxlength: 280
-       },
-       username: {
-        type: String,
-        required: true,
-       },
-       createdAt: {
-        type: Date,
-        default: Date.now,
-        get: createdAtVal => moment(createdAtVal).format("MMM DD, YYYY [at] hh:mm a"),
-       },
+        thoughtText: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 1,
+            maxLength: 280
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now,
+            get: function () {
+                return formatDate(this.createdAt);
+            }
+        },
+        username: {
+            type: String,
+            required: true
+        },
+        reactions: [reactionSchema],
     },
     {
         toJSON: {
             virtuals: true,
             getters: true
         },
-        id: false,
+        id: false
     }
-)
+);
 
-const thoughtSchema = new Schema (
-    {
-      thoughtText: {
-        type: String,
-        required: true,
-        minlength: 1,
-        maxlength: 280,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-        get: createdAtVal => moment(createdAtVal).format("MMM DD, YYYY [at] hh:mm a"),
-      },
-      username: {
-        type: String,
-        required: true,
-      },
-      reactions: [reactionSchema],
-    },
-    {
-        toJSON: {
-            virtuals: true,
-            getters: true,
-        },
-        id: false,
-    }
-)
+thoughtSchema
+    .virtual('reactionCount')
+    .get(function () {
+        return this.reactions.length;
+    });
 
-thoughtSchema.virtual('reactionCount')
-.get(function() {
-    return this.reactions.length;
-})
+thoughtSchema.plugin(mongooseLeanVirtuals);
+thoughtSchema.plugin(mongooseLeanGetters);
 
-
-const Thought = model('Thought', thoughtSchema);
+const Thought = model('thought', thoughtSchema);
 
 module.exports = Thought;
